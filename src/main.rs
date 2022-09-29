@@ -1,6 +1,7 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
 mod uri;
+mod read;
 
 #[derive(Parser, Debug)]
 #[clap(author="Michael Torres", about="A CLI for making Modbus requests")]
@@ -13,11 +14,13 @@ struct Args {
     #[clap(value_parser, verbatim_doc_comment)]
     uri: uri::ModbusUri,
 
-    #[clap(value_parser)]
-    action: String,
+    #[clap(subcommand)]
+    action: Action,
+}
 
-    #[clap(value_parser)]
-    command: String,
+#[derive(Debug, Subcommand)]
+enum Action {
+    Read(read::ReadArgs)
 }
 
 fn main() {
