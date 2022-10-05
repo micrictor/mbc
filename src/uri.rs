@@ -2,7 +2,33 @@ use std::fmt;
 use std::str::FromStr;
 use http::uri::{InvalidUri, Uri};
 
-const VALID_SCHEMES: &'static [&str] = &["rtu", "tcp"];
+#[derive(Clone, Copy)]
+pub enum Proto {
+    Tcp,
+    Rtu,
+}
+
+impl fmt::Debug for Proto {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Proto::Tcp => write!(f, "tcp"),
+            Proto::Rtu => write!(f, "rtu"),
+        }
+    }
+}
+
+impl FromStr for Proto {
+    type Err = InvalidScheme;
+    #[inline]
+    fn from_str(scheme: &str) -> Result<Proto, Self::Err> {
+        match scheme {
+            "tcp" => Ok(Proto::Tcp),
+            "rtu" => Ok(Proto::Rtu),
+            _ => Err(InvalidScheme{scheme: scheme.to_string()})
+        }
+
+    }
+}
 
 /// The provided scheme was not a supported one
 #[derive(Debug, Clone)]
@@ -12,7 +38,7 @@ pub struct InvalidScheme {
 
 impl fmt::Display for InvalidScheme {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "invalid scheme {}, expected one of {:?}", self.scheme, VALID_SCHEMES)
+        write!(f, "invalid scheme {}, expected one of {:?}", self.scheme, [Proto::Rtu, Proto::Tcp])
     }
 }
 
@@ -63,30 +89,30 @@ impl From<InvalidUri> for UriError {
     }
 }
 
-fn default_port_for_scheme<'a>(scheme: &'a str) -> u16 {
-    match scheme {
-        "rtu" => 9600,
-        "tcp" => 502,
-        _ => 0
+fn default_port_for_proto(proto: Proto) -> u16 {
+    match proto {
+        Proto::Rtu => 9600,
+        Proto::Tcp => 502,
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct ModbusUri {
-    scheme: String,
-    host: String,
-    port: u16,
+    pub proto: Proto,
+    pub host: String,
+    pub port: u16,
 }
 
 impl ModbusUri {
-    pub fn try_from(uri: http::Uri) -> Result<ModbusUri, UriError> {
+    pub fn try_from<'a>(uri: http::Uri) -> Result<ModbusUri, UriError> {
         let scheme = match uri.scheme_str() {
             Some(scheme) => scheme,
             None => return Err(UriError::Missing(MissingComponent{uri: uri.to_string(), missing: "scheme"}))
         };
-        if !VALID_SCHEMES.contains(&scheme.to_ascii_lowercase().as_str()) {
-            return Err(UriError::Scheme(InvalidScheme{scheme: scheme.to_owned()}))
-        }
+        let proto = match Proto::from_str(scheme) {
+            Ok(proto) => proto,
+            Err(e) => return Err(UriError::Scheme(e)), 
+        };
 
         let host = match uri.host() {
             Some(host) => host,
@@ -95,10 +121,10 @@ impl ModbusUri {
 
         let port = match uri.port() {
             Some(port) => port.as_u16(),
-            None => default_port_for_scheme(&scheme),
+            None => default_port_for_proto(proto),
         };
         
-        Ok(ModbusUri{scheme: scheme.to_string(), host: host.to_string(), port: port})
+        Ok(ModbusUri{proto: proto, host: host.to_string(), port: port})
     }
 }
 
@@ -107,11 +133,15 @@ impl FromStr for ModbusUri {
     type Err = UriError;
 
     #[inline]
-    fn from_str(s: &str) -> Result<ModbusUri, UriError> {
+    fn from_str<'a>(s: &str) -> Result<ModbusUri, UriError> {
         let uri = Uri::try_from(s.as_bytes())?;
 
-        let mb_uri = ModbusUri::try_from(uri)?;
-        
-        Ok(mb_uri)
+        ModbusUri::try_from(uri)
+    }
+}
+
+impl fmt::Display for ModbusUri {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}://{}:{}", self.proto, self.host, self.port)
     }
 }

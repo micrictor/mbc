@@ -1,4 +1,7 @@
 use clap::{Args, ValueEnum};
+use std::future::Future;
+use std::result::Result;
+use tokio_modbus::client::Context;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 enum ReadFuncs {
@@ -20,6 +23,6 @@ pub struct ReadArgs {
     function: ReadFuncs
 }
 
-pub fn ReadAction(args: ReadArgs) {
+pub fn ReadAction(client: Context, args: ReadArgs) {
     ()
 }
