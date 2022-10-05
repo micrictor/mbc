@@ -34,12 +34,12 @@ enum Action {
 async fn main() -> Result<()> {
     let args = Args::parse();
     let uri = args.uri.clone();
-    let client = client::Context::try_from(args.uri.proto, args.uri.host, args.uri.port, Some(args.terminal_id))
+    let mut client = client::Context::try_from(args.uri.proto, args.uri.host, args.uri.port, Some(args.terminal_id))
         .await
         .with_context(|| format!("could not open `{}`", uri))?;
 
     match args.action {
-        Action::Read(read_args) => read::ReadAction(client, read_args)
+        Action::Read(read_args) => read::read_action(&mut client, read_args)
     };
     Ok(())
 }
