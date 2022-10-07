@@ -43,7 +43,7 @@ pub async fn read_action(client: &mut Context, args: args::ReadArgs) -> Result<(
             let mut request: Vec<u8> = vec![6];
             let mut args_vec: Vec<u8> = vec![args.file_number, args.starting_record, args.record_length]
                 .iter()
-                .flat_map(|&x| x.to_le_bytes())
+                .flat_map(|&x| x.to_be_bytes())
                 .collect();
             request.append(&mut args_vec);
             request.insert(0, request.len() as u8);
