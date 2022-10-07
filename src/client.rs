@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use tokio_serial;
 use tokio_modbus::client::{Context as ParentContext, rtu, tcp};
 
-use crate::uri::Proto;
+use crate::uri::{ModbusUri, Proto};
 
 pub struct Context {}
 
@@ -22,10 +22,10 @@ async fn try_from_rtu(device_path: String, bitrate: u32, terminal_id: u8) -> Res
 }
 
 impl Context {
-    pub async fn try_from(proto: Proto, host: String, port: u16, terminal_id: Option<u8>) -> Result<ParentContext, IOError> {
-        match proto {
-            Proto::Tcp => try_from_tcp(host, port).await,
-            Proto::Rtu => try_from_rtu(host, port.into(), terminal_id.unwrap_or(42)).await,
+    pub async fn try_from(uri: ModbusUri, terminal_id: Option<u8>) -> Result<ParentContext, IOError> {
+        match uri.proto {
+            Proto::Tcp => try_from_tcp(uri.host, uri.port).await,
+            Proto::Rtu => try_from_rtu(uri.host, uri.port.into(), terminal_id.unwrap_or(42)).await,
         }
     }
 }

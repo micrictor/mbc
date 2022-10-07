@@ -33,10 +33,9 @@ enum Action {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    let uri = args.uri.clone();
-    let mut client = client::Context::try_from(args.uri.proto, args.uri.host, args.uri.port, Some(args.terminal_id))
+    let mut client = client::Context::try_from(args.uri.clone(), Some(args.terminal_id))
         .await
-        .with_context(|| format!("could not open `{}`", uri))?;
+        .with_context(|| format!("could not open `{}`", args.uri))?;
 
     match args.action {
         Action::Read(read_args) => read::read_action(&mut client, read_args)
