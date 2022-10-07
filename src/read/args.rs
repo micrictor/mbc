@@ -11,17 +11,17 @@ pub struct ReadArgs {
 #[derive(Clone, Debug, Subcommand)]
 pub enum ReadFuncs {
     /// coil value(s)
-    Coils(CoilsArgs),
+    Coils(AddrQuantity),
     // input value(s)
-    DiscreteInputs,
+    DiscreteInputs(AddrQuantity),
     // input register value(s)
-    InputRegisters,
+    InputRegisters(AddrQuantity),
     // holding register value(s)
-    HoldingRegisters,
+    HoldingRegisters(AddrQuantity),
 }
 
 #[derive(Args, Clone, Debug)]
-pub struct CoilsArgs {
+pub struct AddrQuantity {
     #[clap(value_parser)]
     pub address: u16,
 
