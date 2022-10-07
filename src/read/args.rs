@@ -1,8 +1,8 @@
-use clap::{Args, ValueEnum, Subcommand};
-use tokio_modbus::{client::Context, prelude::Reader};
+
+use clap::{Args, Subcommand};
 
 #[derive(Debug, Subcommand)]
-enum ReadFuncs {
+pub enum ReadFuncs {
     /// coil value(s)
     Coils(CoilsArgs),
     // input value(s)
@@ -18,24 +18,14 @@ enum ReadFuncs {
 #[derive(Args, Debug)]
 pub struct ReadArgs {
     #[clap(subcommand)]
-    function: ReadFuncs,
+    pub function: ReadFuncs,
 }
 
 #[derive(Args, Clone, Debug)]
-struct CoilsArgs {
+pub struct CoilsArgs {
     #[clap(value_parser)]
-    address: u16,
+    pub address: u16,
 
     #[clap(value_parser)]
-    quantity: u16,
-}
-
-pub fn read_action(client: &mut Context, args: ReadArgs) {
-    match args.function {
-        ReadFuncs::Coils(args) => {
-            client.read_coils(args.address, args.quantity);
-        },
-        _ => (),
-    };
-    ()
+    pub quantity: u16,
 }

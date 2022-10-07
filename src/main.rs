@@ -27,7 +27,7 @@ struct Args {
 
 #[derive(Debug, Subcommand)]
 enum Action {
-    Read(read::ReadArgs)
+    Read(read::args::ReadArgs)
 }
 
 #[tokio::main]
