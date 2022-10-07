@@ -1,4 +1,4 @@
-use std::io::{Error, ErrorKind};
+use std::io::Error;
 use tokio_modbus::{client::Context, prelude::Reader};
 
 pub mod args;
@@ -13,6 +13,29 @@ pub async fn read_action(client: &mut Context, args: args::ReadArgs) -> Result<(
             };
             Ok(())
         },
-        _ => Err(Error::new(ErrorKind::InvalidInput, "invalid read function specified")),
+        args::ReadFuncs::DiscreteInputs(args) => {
+            let inputs = client.read_discrete_inputs(args.address, args.quantity).await?;
+            println!("Discrete inputs:\n\tAddress\tStatus\n");
+            for idx in 0..inputs.len() {
+                println!("\t{}\t{}", usize::from(args.address) + idx, inputs[idx])
+            };
+            Ok(())
+        },
+        args::ReadFuncs::HoldingRegisters(args) => {
+            let registers = client.read_holding_registers(args.address, args.quantity).await?;
+            println!("Registers:\n\tAddress\tValue (hex)\n");
+            for idx in 0..registers.len() {
+                println!("\t{}\t{:#04x}", usize::from(args.address) + idx, registers[idx])
+            };
+            Ok(())
+        },
+        args::ReadFuncs::InputRegisters(args) => {
+            let registers = client.read_input_registers(args.address, args.quantity).await?;
+            println!("Registers:\n\tAddress\tValue (hex)\n");
+            for idx in 0..registers.len() {
+                println!("\t{}\t{:#04x}", usize::from(args.address) + idx, registers[idx])
+            };
+            Ok(())
+        },
     }
 }
