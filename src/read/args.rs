@@ -18,6 +18,8 @@ pub enum ReadFuncs {
     InputRegisters(AddrQuantity),
     // holding register value(s)
     HoldingRegisters(AddrQuantity),
+    // file record
+    FileRecord(FileReference),
 }
 
 #[derive(Args, Clone, Debug)]
@@ -27,4 +29,16 @@ pub struct AddrQuantity {
 
     #[clap(value_parser)]
     pub quantity: u16,
+}
+
+#[derive(Args, Clone, Debug)]
+pub struct FileReference {
+    #[clap(value_parser)]
+    pub file_number: u16,
+
+    #[clap(value_parser)]
+    pub starting_record: u16,
+
+    #[clap(value_parser)]
+    pub record_length: u16,
 }

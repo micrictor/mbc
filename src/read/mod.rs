@@ -1,7 +1,9 @@
 use std::io::Error;
-use tokio_modbus::{client::Context, prelude::Reader};
+use tokio_modbus::{client::Context, prelude::{Reader, Request, Client}};
 
 pub mod args;
+
+const READ_FILE_RECORD: u8 = 0x14;
 
 pub async fn read_action(client: &mut Context, args: args::ReadArgs) -> Result<(), Error>{
     match args.function {
@@ -37,5 +39,17 @@ pub async fn read_action(client: &mut Context, args: args::ReadArgs) -> Result<(
             };
             Ok(())
         },
+        args::ReadFuncs::FileRecord(args) => {
+            let mut request: Vec<u8> = vec![6];
+            let mut args_vec: Vec<u8> = vec![args.file_number, args.starting_record, args.record_length]
+                .iter()
+                .flat_map(|&x| x.to_le_bytes())
+                .collect();
+            request.append(&mut args_vec);
+            request.insert(0, request.len() as u8);
+            let response = client.call(Request::Custom(READ_FILE_RECORD, request)).await?;
+            println!("{:?}", response);
+            Ok(())
+        }
     }
 }
