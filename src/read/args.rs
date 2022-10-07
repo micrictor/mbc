@@ -12,33 +12,38 @@ pub struct ReadArgs {
 pub enum ReadFuncs {
     /// coil value(s)
     Coils(AddrQuantity),
-    // input value(s)
+    /// input value(s)
     DiscreteInputs(AddrQuantity),
-    // input register value(s)
+    /// input register value(s)
     InputRegisters(AddrQuantity),
-    // holding register value(s)
+    /// holding register value(s)
     HoldingRegisters(AddrQuantity),
-    // file record
-    FileRecord(FileReference),
+    /// file record(s)
+    FileRecords(FileReference),
 }
 
 #[derive(Args, Clone, Debug)]
 pub struct AddrQuantity {
+    /// starting address
     #[clap(value_parser)]
     pub address: u16,
 
-    #[clap(value_parser)]
+    /// number of addresses to read, between 1 and 2000
+    #[clap(value_parser = clap::value_parser!(u16).range(1..2001))]
     pub quantity: u16,
 }
 
 #[derive(Args, Clone, Debug)]
 pub struct FileReference {
+    /// file number
     #[clap(value_parser)]
     pub file_number: u16,
 
-    #[clap(value_parser)]
+    /// starting record number, between 0 and 9999
+    #[clap(value_parser = clap::value_parser!(u16).range(0..10000))]
     pub starting_record: u16,
 
+    /// length of the record to be read
     #[clap(value_parser)]
     pub record_length: u16,
 }
