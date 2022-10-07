@@ -1,6 +1,13 @@
 
 use clap::{Args, Subcommand};
 
+/// Read status information from the remote bus
+#[derive(Args, Clone, Debug)]
+pub struct ReadArgs {
+    #[clap(subcommand)]
+    pub function: ReadFuncs,
+}
+
 #[derive(Clone, Debug, Subcommand)]
 pub enum ReadFuncs {
     /// coil value(s)
@@ -11,14 +18,6 @@ pub enum ReadFuncs {
     InputRegisters,
     // holding register value(s)
     HoldingRegisters,
-}
-
-
-/// Read status information from the remote bus
-#[derive(Args, Clone, Debug)]
-pub struct ReadArgs {
-    #[clap(subcommand)]
-    pub function: ReadFuncs,
 }
 
 #[derive(Args, Clone, Debug)]
