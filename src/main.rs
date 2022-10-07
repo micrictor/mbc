@@ -38,7 +38,9 @@ async fn main() -> Result<()> {
         .with_context(|| format!("could not open `{}`", args.uri))?;
 
     match args.action {
-        Action::Read(read_args) => read::read_action(&mut client, read_args)
+        Action::Read(read_args) => read::read_action(&mut client, read_args.clone())
+            .await
+            .with_context(|| format!("could not read `{:?}`", read_args))?
     };
     Ok(())
 }

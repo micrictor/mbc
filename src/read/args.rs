@@ -1,7 +1,7 @@
 
 use clap::{Args, Subcommand};
 
-#[derive(Debug, Subcommand)]
+#[derive(Clone, Debug, Subcommand)]
 pub enum ReadFuncs {
     /// coil value(s)
     Coils(CoilsArgs),
@@ -15,7 +15,7 @@ pub enum ReadFuncs {
 
 
 /// Read status information from the remote bus
-#[derive(Args, Debug)]
+#[derive(Args, Clone, Debug)]
 pub struct ReadArgs {
     #[clap(subcommand)]
     pub function: ReadFuncs,
