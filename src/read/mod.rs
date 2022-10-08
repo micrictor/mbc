@@ -1,11 +1,9 @@
 use std::io::Error;
-use tokio_modbus::{client::Context, prelude::{Reader, Request, Client}};
+use crate::client::ReaderExt;
 
 pub mod args;
 
-const READ_FILE_RECORD: u8 = 0x14;
-
-pub async fn read_action(client: &mut Context, args: args::ReadArgs) -> Result<(), Error>{
+pub async fn read_action(client: &mut dyn ReaderExt, args: args::ReadArgs) -> Result<(), Error>{
     match args.function {
         args::ReadFuncs::Coils(args) => {
             let coil_statuses = client.read_coils(args.address, args.quantity).await?;
@@ -40,15 +38,7 @@ pub async fn read_action(client: &mut Context, args: args::ReadArgs) -> Result<(
             Ok(())
         },
         args::ReadFuncs::FileRecords(args) => {
-            let mut request: Vec<u8> = vec![6];
-            let mut args_vec: Vec<u8> = vec![args.file_number, args.starting_record, args.record_length]
-                .iter()
-                .flat_map(|&x| x.to_be_bytes())
-                .collect();
-            request.append(&mut args_vec);
-            request.insert(0, request.len() as u8);
-            let response = client.call(Request::Custom(READ_FILE_RECORD, request)).await?;
-            println!("{:?}", response);
+            client.read_file_record(args.file_number, args.starting_record, args.record_length);
             Ok(())
         }
     }

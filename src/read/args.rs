@@ -47,3 +47,10 @@ pub struct FileReference {
     #[clap(value_parser)]
     pub record_length: u16,
 }
+
+#[derive(Args, Clone, Debug)]
+pub struct QueueAddress {
+    /// file number
+    #[clap(value_parser)]
+    pub pointer_address: u16,
+}
