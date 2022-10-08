@@ -19,6 +19,26 @@ pub struct FileRecord {
     pub record_data: Vec<u16>,
 }
 
+impl TryFrom<Vec<u8>> for FileRecord {
+    type Error = Error;
+    fn try_from(data: Vec<u8>) -> Result<FileRecord, Error> {
+        if data.len() < 5 {
+            return Err(Error::new(ErrorKind::InvalidData, format!("response data len {}, want >= 5", data.len())))
+        }
+        
+        let resp_data_len = data[0];
+        let file_resp_len = data[1];
+        let ref_type = data[2];
+
+        let mut record_data: Vec<u16> = vec![];
+        for i in (2..data.len()).step_by(2) {
+            record_data.push((&data[i..i+1]).read_u16::<BigEndian>().unwrap());
+        }
+
+        Ok(FileRecord{resp_data_len, file_resp_len, ref_type, record_data})
+    }
+}
+
 #[async_trait]
 pub trait ReaderExt: Reader {
     async fn read_file_record(&mut self, file_number: u16, starting_record: u16, record_length: u16) -> Result<FileRecord, Error>;
@@ -37,16 +57,7 @@ impl ReaderExt for Context {
         let rsp = self.call(Request::Custom(READ_FILE_RECORD, request)).await?;
         match rsp {
             Response::Custom(_func_code, response_vec) => {
-                let resp_data_len = response_vec[0];
-                let file_resp_len = response_vec[1];
-                let ref_type = response_vec[2];
-
-                let mut record_data: Vec<u16> = vec![];
-                for i in (2..response_vec.len()).step_by(2) {
-                    record_data.push((&response_vec[i..i+1]).read_u16::<BigEndian>().unwrap());
-                }
-
-                Ok(FileRecord{resp_data_len, file_resp_len, ref_type, record_data})
+                Ok(FileRecord::try_from(response_vec)?)
             },
             _ => Err(Error::new(ErrorKind::InvalidData, "invalud response data"))
         }
