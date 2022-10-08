@@ -1,7 +1,7 @@
 use std::io::{Error, ErrorKind};
 use std::net::SocketAddr;
 use tokio_serial;
-use tokio_modbus::prelude::{Request, Response, rtu, tcp};
+use tokio_modbus::prelude::{Reader, Request, Response, rtu, tcp};
 pub use tokio_modbus::client::{Client, Context};
 use async_trait::async_trait;
 use byteorder::{BigEndian, ReadBytesExt};
@@ -20,7 +20,7 @@ pub struct FileRecord {
 }
 
 #[async_trait]
-pub trait ReaderExt: tokio_modbus::prelude::Reader {
+pub trait ReaderExt: Reader {
     async fn read_file_record(&mut self, file_number: u16, starting_record: u16, record_length: u16) -> Result<FileRecord, Error>;
 }
 
