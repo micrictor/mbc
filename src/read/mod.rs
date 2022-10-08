@@ -38,7 +38,17 @@ pub async fn read_action(client: &mut dyn ReaderExt, args: args::ReadArgs) -> Re
             Ok(())
         },
         args::ReadFuncs::FileRecords(args) => {
-            client.read_file_record(args.file_number, args.starting_record, args.record_length);
+            let file_record = client.read_file_record(args.file_number, args.starting_record, args.record_length).await?;
+            for i in (0..file_record.record_data.len()).step_by(16) {
+                print!("{:#04}:", i);
+                for j in i..i+16 {
+                    if j > file_record.record_data.len() {
+                        break;
+                    }
+                    print!(" {}", file_record.record_data[j]);
+                }
+                print!("\n");
+            }
             Ok(())
         }
     }

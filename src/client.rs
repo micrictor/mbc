@@ -13,10 +13,10 @@ const READ_FILE_RECORD: u8 = 0x14;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FileRecord {
-    resp_data_len: u8,
-    file_resp_len: u8,
-    ref_type: u8,
-    record_data: Vec<u16>,
+    pub resp_data_len: u8,
+    pub file_resp_len: u8,
+    pub ref_type: u8,
+    pub record_data: Vec<u16>,
 }
 
 #[async_trait]
