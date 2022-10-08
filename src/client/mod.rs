@@ -90,14 +90,12 @@ impl ReaderExt for Context {
     }
 }
 
-#[tokio::main]
 async fn get_tcp_client(host: String, port: u16) -> Result<Context, Error> {
     let socket: SocketAddr = format!("{}:{}", host, port).parse().unwrap();
     let ctx = tcp::connect(socket).await?;
     Ok(ctx)
 }
 
-#[tokio::main]
 async fn get_rtu_client(device_path: String, bitrate: u32, terminal_id: u8) -> Result<Context, Error> {
     let terminal = tokio_modbus::slave::Slave(terminal_id);
     let builder = tokio_serial::new(device_path, bitrate);
@@ -106,12 +104,10 @@ async fn get_rtu_client(device_path: String, bitrate: u32, terminal_id: u8) -> R
     Ok(ctx)
 }
 
-impl TryFrom<Args> for Context {
-    type Error = Error;
-    fn try_from(args: Args) -> Result<Context, Error> {
-        match args.uri.proto {
-            Proto::Tcp => get_tcp_client(args.uri.host, args.uri.port),
-            Proto::Rtu => get_rtu_client(args.uri.host, args.uri.port.into(), args.terminal_id),
-        }
+
+pub async fn context_try_from(args: Args) -> Result<Context, Error> {
+    match args.uri.proto {
+        Proto::Tcp => Ok(get_tcp_client(args.uri.host, args.uri.port).await?),
+        Proto::Rtu => Ok(get_rtu_client(args.uri.host, args.uri.port.into(), args.terminal_id).await?),
     }
 }
