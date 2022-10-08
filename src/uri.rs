@@ -103,8 +103,10 @@ pub struct ModbusUri {
     pub port: u16,
 }
 
-impl ModbusUri {
-    pub fn try_from<'a>(uri: http::Uri) -> Result<ModbusUri, UriError> {
+impl TryFrom<Uri> for ModbusUri {
+    type Error = UriError;
+
+    fn try_from(uri: Uri) -> Result<Self, Self::Error> {
         let scheme = match uri.scheme_str() {
             Some(scheme) => scheme,
             None => return Err(UriError::Missing(MissingComponent{uri: uri.to_string(), missing: "scheme"}))
@@ -124,7 +126,7 @@ impl ModbusUri {
             None => default_port_for_proto(proto),
         };
         
-        Ok(ModbusUri{proto: proto, host: host.to_string(), port: port})
+        Ok(ModbusUri{proto, host: host.to_string(), port})
     }
 }
 
