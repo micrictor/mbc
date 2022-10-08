@@ -19,48 +19,69 @@ pub async fn read_action(client: &mut dyn ReaderExt, args: args::ReadArgs) -> Re
         },
         args::ReadFuncs::DiscreteInputs(args) => {
             let inputs = client.read_discrete_inputs(args.address, args.quantity).await?;
-            println!("Discrete inputs:\n\tAddress\tStatus\n");
-            for idx in 0..inputs.len() {
-                println!("\t{}\t{}", usize::from(args.address) + idx, inputs[idx])
-            };
-            Ok(CommandResult { columns: vec![], rows: vec![vec![]] })
+
+            let rows: Vec<Vec<String>> = inputs
+                .iter()
+                .enumerate()
+                .map(|(i, &status)| vec![i.to_string(), status.to_string()])
+                .collect();
+            let columns = vec!["address".to_string(), "status".to_string()];
+            Ok(CommandResult { columns, rows })
         },
         args::ReadFuncs::HoldingRegisters(args) => {
             let registers = client.read_holding_registers(args.address, args.quantity).await?;
-            println!("Registers:\n\tAddress\tValue (hex)\n");
-            for idx in 0..registers.len() {
-                println!("\t{}\t{:#04x}", usize::from(args.address) + idx, registers[idx])
-            };
-            Ok(CommandResult { columns: vec![], rows: vec![vec![]] })
+
+            let rows: Vec<Vec<String>> = registers
+                .iter()
+                .enumerate()
+                .map(|(i, &value)| vec![i.to_string(), format!("{:#04x}", value)])
+                .collect();
+            let columns = vec!["address".to_string(), "value".to_string()];
+            Ok(CommandResult { columns, rows })
         },
         args::ReadFuncs::InputRegisters(args) => {
             let registers = client.read_input_registers(args.address, args.quantity).await?;
-            println!("Registers:\n\tAddress\tValue (hex)\n");
-            for idx in 0..registers.len() {
-                println!("\t{}\t{:#04x}", usize::from(args.address) + idx, registers[idx])
-            };
-            Ok(CommandResult { columns: vec![], rows: vec![vec![]] })
+            
+            let rows: Vec<Vec<String>> = registers
+                .iter()
+                .enumerate()
+                .map(|(i, &value)| vec![i.to_string(), format!("{:#04x}", value)])
+                .collect();
+            let columns = vec!["address".to_string(), "value".to_string()];
+            Ok(CommandResult { columns, rows })
         },
         args::ReadFuncs::FileRecords(args) => {
             let file_record = client.read_file_record(args.file_number, args.starting_record, args.record_length).await?;
-            for i in (0..file_record.record_data.len()).step_by(16) {
-                print!("{:#04}:", i);
-                for j in i..i+16 {
+
+            // File record output logic is a little less standard. 
+            // Because file records may be large, I wanted to facilitate parsing by using xxd-compatible output. Thus, each
+            // "value" is actually 16 values in hexadecimal notation, space delimited.
+            let mut rows: Vec<Vec<String>> = vec![];
+            for i in (0..file_record.record_data.len()).step_by(8) {
+                let mut row: Vec<String> = vec![format!("{:#04}:", i*2)];
+                let mut row_data: Vec<String> = vec![];
+                for j in i..i+8 {
                     if j > file_record.record_data.len() {
                         break;
                     }
-                    print!(" {}", file_record.record_data[j]);
+                    row_data.push(format!("{:X}", file_record.record_data[j]));
                 }
-                print!("\n");
+                row.push(row_data.join(" "));
+                rows.push(row);
             }
-            Ok(CommandResult { columns: vec![], rows: vec![vec![]] })
+            let columns = vec!["offset".to_string(), "value".to_string()];
+            Ok(CommandResult { columns, rows })
         },
         args::ReadFuncs::FIFOQueue(args) => {
             let queue_items = client.read_fifo_queue(args.pointer_address).await?;
-            let output_line_map = queue_items.iter().enumerate().map(|(i, &x)| format!("{:#02}: {}\n", i, x));
-            let output_lines: Vec<String> = output_line_map.collect();
-            print!("{}", output_lines.join(""));
-            Ok(CommandResult { columns: vec![], rows: vec![vec![]] })
+
+            let rows: Vec<Vec<String>> = queue_items
+                .iter()
+                .enumerate()
+                .map(|(i, &value)| vec![i.to_string(), format!("{:#04x}", value)])
+                .collect();
+            let columns = vec!["offset".to_string(), "value".to_string()];
+            Ok(CommandResult { columns, rows })
         }
     }
 }
