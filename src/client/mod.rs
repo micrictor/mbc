@@ -10,6 +10,7 @@ use crate::args::Args;
 use crate::uri::Proto;
 
 const READ_FILE_RECORD: u8 = 0x14;
+const READ_FIFO_QUEUE: u8 = 0x18;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FileRecord {
@@ -41,13 +42,19 @@ impl TryFrom<Vec<u8>> for FileRecord {
 
 #[async_trait]
 pub trait ReaderExt: Reader {
+    /// Read a file record.
+    /// A file is an organization of records. Each file contains 10000(0x270F) records, 0-indexed.
+    /// Though not implemented here, the Modbus spec permits multiple records to be read per call 
     async fn read_file_record(&mut self, file_number: u16, starting_record: u16, record_length: u16) -> Result<FileRecord, Error>;
+    /// Read a First-In, First-Out (FIFO) queue of registers on the remote device.
+    /// Up to 31 data registers can be read. Queue contents are read, but not cleared.
+    async fn read_fifo_queue(&mut self, pointer_address: u16) -> Result<Vec<u16>, Error>;
 }
 
 #[async_trait]
 impl ReaderExt for Context {
     async fn read_file_record(&mut self, file_number: u16, starting_record: u16, record_length: u16) -> Result<FileRecord, Error> {
-        let mut request: Vec<u8> = vec![6];
+        let mut request: Vec<u8> = vec![6]; // Reference type is always 6.
         let mut args_vec: Vec<u8> = vec![file_number, starting_record, record_length]
             .iter()
             .flat_map(|&x| x.to_be_bytes())
@@ -59,9 +66,27 @@ impl ReaderExt for Context {
             Response::Custom(_func_code, response_vec) => {
                 Ok(FileRecord::try_from(response_vec)?)
             },
-            _ => Err(Error::new(ErrorKind::InvalidData, "invalud response data"))
+            _ => Err(Error::new(ErrorKind::InvalidData, "invalid response data"))
         }
         
+    }
+
+    async fn read_fifo_queue(&mut self, pointer_address: u16) -> Result<Vec<u16>, Error> {
+        let rsp = self.call(Request::Custom(READ_FIFO_QUEUE, pointer_address.to_be_bytes().into())).await?;
+        match rsp {
+            Response::Custom(_func_code, raw_vec) => {
+                let mut response_vec: Vec<u16> = vec![];
+                // The first 4 values aren't super meaningful to us, as they describe the size and number of items returned.
+                // At some point, it may be worth reading them to fail more gracefully if we recieve malformed responses,
+                // but for now we'll just rely on Vec's panic if we try to read out of bounds. 
+                for i in (4..raw_vec.len()).step_by(2) {
+                    response_vec.push((&raw_vec[i..i+1]).read_u16::<BigEndian>().unwrap());
+                }
+
+                Ok(response_vec)
+            },
+            _ => Err(Error::new(ErrorKind::InvalidData, "invalid response data"))
+        }
     }
 }
 

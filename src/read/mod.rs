@@ -50,6 +50,13 @@ pub async fn read_action(client: &mut dyn ReaderExt, args: args::ReadArgs) -> Re
                 print!("\n");
             }
             Ok(())
+        },
+        args::ReadFuncs::FIFOQueue(args) => {
+            let queue_items = client.read_fifo_queue(args.pointer_address).await?;
+            let output_line_map = queue_items.iter().enumerate().map(|(i, &x)| format!("{:#02}: {}\n", i, x));
+            let output_lines: Vec<String> = output_line_map.collect();
+            print!("{}", output_lines.join(""));
+            Ok(())
         }
     }
 }

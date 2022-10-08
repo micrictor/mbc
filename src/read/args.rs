@@ -20,6 +20,8 @@ pub enum ReadFuncs {
     HoldingRegisters(AddrQuantity),
     /// file record(s)
     FileRecords(FileReference),
+    /// FIFO queue
+    FIFOQueue(QueueAddress),
 }
 
 #[derive(Args, Clone, Debug)]
