@@ -228,6 +228,7 @@ async fn get_rtu_client(device_path: String, bitrate: u32, terminal_id: u8) -> R
 }
 
 
+// Can't impl TryFrom becuase this is all async
 pub async fn context_try_from(args: Args) -> Result<Context, Error> {
     match args.uri.proto {
         Proto::Tcp => Ok(get_tcp_client(args.uri.host, args.uri.port).await?),
