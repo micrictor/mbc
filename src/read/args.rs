@@ -25,7 +25,7 @@ pub enum ReadFuncs {
     FIFOQueue(QueueAddress),
     /// Device Identification
     DeviceIdentification(DeviceIdentification),
-    /// Server ID
+    /// Server ID. Per the Modbus standard, this will only work on serial RTUs.
     ServerID,
 }
 
