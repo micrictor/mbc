@@ -25,6 +25,8 @@ pub enum ReadFuncs {
     FIFOQueue(QueueAddress),
     /// Device Identification
     DeviceIdentification(DeviceIdentification),
+    /// Server ID
+    ServerID,
 }
 
 #[derive(Args, Clone, Debug)]

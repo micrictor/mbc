@@ -15,6 +15,7 @@ use crate::uri::Proto;
 const READ_FILE_RECORD: u8 = 0x14;
 const READ_FIFO_QUEUE: u8 = 0x18;
 const READ_DEVICE_IDENTIFICATION: u8 = 0x2B;
+const READ_SERVER_IDENTIFICATION: u8 = 0x11;
 const MEI_CODE: u8 = 0x0E;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -175,6 +176,8 @@ pub trait ReaderExt: Reader {
     async fn read_fifo_queue(&mut self, pointer_address: u16) -> Result<Vec<u16>, Error>;
     /// Read device identification information. Requires device to implement Modbus Encapsulated Interface (MEI).
     async fn read_device_identification(&mut self, id_code: DeviceIdentificationCode, object_id: u8) -> Result<DeviceIdentification, Error>;
+    /// Read server identification. Data returned is device-specific
+    async fn read_server_identification(&mut self) -> Result<Vec<u8>, Error>;
 }
 
 #[async_trait]
@@ -223,6 +226,16 @@ impl ReaderExt for Context {
             Response::Custom(_func_code, raw_vec) => {
                 let vecdeq: VecDeque<u8> = raw_vec.into();
                 Ok(vecdeq.into())
+            },
+            _ => Err(Error::new(ErrorKind::InvalidData, "invalid response data"))
+        }
+    }
+
+    async fn read_server_identification(&mut self) -> Result<Vec<u8>, Error> {
+        let rsp = self.call(Request::Custom(READ_SERVER_IDENTIFICATION, vec![])).await?;
+        match rsp {
+            Response::Custom(_func_code, response_vec) => {
+                Ok(response_vec)
             },
             _ => Err(Error::new(ErrorKind::InvalidData, "invalid response data"))
         }

@@ -105,5 +105,24 @@ pub async fn read_action(client: &mut dyn ReaderExt, args: args::ReadArgs) -> Re
             ];
             Ok(CommandResult { columns, rows })
         },
+        args::ReadFuncs::ServerID => {
+            let server_id_data = client.read_server_identification().await?;
+
+            let mut rows: Vec<Vec<String>> = vec![];
+            for i in (0..server_id_data.len()).step_by(16) {
+                let mut row: Vec<String> = vec![format!("{:#04}:", i)];
+                let mut row_data: Vec<String> = vec![];
+                for j in i..i+16 {
+                    if j > server_id_data.len() {
+                        break;
+                    }
+                    row_data.push(format!("{:X}", server_id_data[j]));
+                }
+                row.push(row_data.join(" "));
+                rows.push(row);
+            }
+            let columns = vec!["offset".to_string(), "value".to_string()];
+            Ok(CommandResult { columns, rows })
+        },
     }
 }
