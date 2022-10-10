@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use crate::{read, uri};
+use crate::{custom, read, uri};
 
 #[derive(Clone, Parser, Debug)]
 #[clap(author="Michael Torres", about="A CLI for making Modbus requests")]
@@ -22,5 +22,6 @@ pub struct Args {
 
 #[derive(Clone, Debug, Subcommand)]
 pub enum Action {
-    Read(read::args::ReadArgs)
+    Read(read::args::ReadArgs),
+    Custom(custom::CustomArgs),
 }
