@@ -25,7 +25,9 @@ async fn main() -> Result<()> {
         args::Action::Read(read_args) => read::read_action(&mut client, read_args.clone())
             .await
             .with_context(|| format!("could not read `{:?}`", read_args))?,
-        args::Action::Custom(custom_args) => CommandResult { columns: vec![], rows: vec![] },
+        args::Action::Custom(custom_args) => custom::custom_action(&mut client, custom_args)
+            .await
+            .with_context(|| "failed to send custom command")?,
     };
 
     println!("{}", result.columns.join("\t"));
