@@ -1,5 +1,6 @@
 
 use clap::{Args, Subcommand};
+use crate::client::DeviceIdentificationCode;
 
 /// Read status information from the remote bus
 #[derive(Args, Clone, Debug)]
@@ -22,6 +23,8 @@ pub enum ReadFuncs {
     FileRecords(FileReference),
     /// FIFO queue
     FIFOQueue(QueueAddress),
+    /// Device Identification
+    DeviceIdentification(DeviceIdentification),
 }
 
 #[derive(Args, Clone, Debug)]
@@ -55,4 +58,14 @@ pub struct QueueAddress {
     /// file number
     #[clap(value_parser)]
     pub pointer_address: u16,
+}
+
+#[derive(Args, Clone, Debug)]
+pub struct DeviceIdentification {
+    /// device identification code.
+    #[clap(value_enum)]
+    pub device_id_code: DeviceIdentificationCode,
+    /// object to be read
+    #[clap(value_parser)]
+    pub object_id: u8,
 }

@@ -1,3 +1,4 @@
+use core::fmt;
 use std::collections::VecDeque;
 use std::io::{Error, ErrorKind};
 use std::net::SocketAddr;
@@ -6,6 +7,7 @@ use tokio_modbus::prelude::{Reader, Request, Response, rtu, tcp};
 pub use tokio_modbus::client::{Client, Context};
 use async_trait::async_trait;
 use byteorder::{BigEndian, ReadBytesExt};
+use clap::ValueEnum;
 
 use crate::args::Args;
 use crate::uri::Proto;
@@ -43,7 +45,7 @@ impl TryFrom<Vec<u8>> for FileRecord {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 #[repr(u8)] 
 pub enum DeviceIdentificationCode {
     Basic = 1,
@@ -87,6 +89,20 @@ impl From<u8> for DeviceConformity {
             0x83 => DeviceConformity::RegularWithIndividual,
             _ => DeviceConformity::Unknown,
         }
+    }
+}
+
+impl fmt::Display for DeviceConformity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", match self {
+            DeviceConformity::Basic => "Basic",
+            DeviceConformity::Extended => "Extended",
+            DeviceConformity::Regular => "Regular",
+            DeviceConformity::BasicWithIndividual => "BasicWithIndividual",
+            DeviceConformity::ExtendedWithIndividual => "ExtendedWithIndividual",
+            DeviceConformity::RegularWithIndividual => "RegularWithIndividual",
+           _ => "Unknown",
+        })
     }
 }
 

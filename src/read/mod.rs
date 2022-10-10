@@ -1,4 +1,6 @@
 use std::io::Error;
+use anyhow::Context;
+
 use crate::client::ReaderExt;
 use crate::CommandResult;
 
@@ -82,6 +84,26 @@ pub async fn read_action(client: &mut dyn ReaderExt, args: args::ReadArgs) -> Re
                 .collect();
             let columns = vec!["offset".to_string(), "value".to_string()];
             Ok(CommandResult { columns, rows })
-        }
+        },
+        args::ReadFuncs::DeviceIdentification(args) => {
+            let device_id = client.read_device_identification(args.device_id_code, args.object_id).await?;
+            let rows: Vec<Vec<String>> = device_id.objects
+                .iter()
+                .map(|o| vec![
+                    o.id.to_string(),
+                    std::str::from_utf8(&o.value)
+                        .with_context(|| format!("failed to decode object as utf8"))
+                        .unwrap()
+                        .to_string(),
+                    device_id.conformity_level.to_string()
+                ])
+                .collect();
+            let columns = vec![
+                "object_id".to_string(),
+                "value".to_string(),
+                "conformity_level".to_string()
+            ];
+            Ok(CommandResult { columns, rows })
+        },
     }
 }
