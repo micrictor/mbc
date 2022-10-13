@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use std::io::{Error, ErrorKind};
 use std::net::SocketAddr;
 use tokio_serial;
-use tokio_modbus::prelude::{Reader, Request, Response, rtu, tcp};
+use tokio_modbus::prelude::{Reader, Request, Response, rtu, tcp, Writer};
 pub use tokio_modbus::client::{Client, Context};
 use async_trait::async_trait;
 use byteorder::{BigEndian, ReadBytesExt};
@@ -16,6 +16,7 @@ const READ_FILE_RECORD: u8 = 0x14;
 const READ_FIFO_QUEUE: u8 = 0x18;
 const READ_DEVICE_IDENTIFICATION: u8 = 0x2B;
 const READ_SERVER_IDENTIFICATION: u8 = 0x11;
+const WRITE_FILE_RECORD: u8 = 0x15;
 const MEI_CODE: u8 = 0x0E;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -181,6 +182,14 @@ pub trait ReaderExt: Reader {
 }
 
 #[async_trait]
+pub trait WriterExt: Writer {
+    /// Write a file record, returning true if the write suceeded.
+    /// A file is an organization of records. Each file contains 10000(0x270F) records, 0-indexed.
+    /// Though not implemented here, the Modbus spec permits multiple records to be written per call 
+    async fn write_file_record(&mut self, file_number: u16, record_number: u16, data: Vec<u16>) -> Result<(), Error>;
+}
+
+#[async_trait]
 impl ReaderExt for Context {
     async fn read_file_record(&mut self, file_number: u16, starting_record: u16, record_length: u16) -> Result<FileRecord, Error> {
         let mut request: Vec<u8> = vec![6]; // Reference type is always 6.
@@ -236,6 +245,36 @@ impl ReaderExt for Context {
         match rsp {
             Response::Custom(_func_code, response_vec) => {
                 Ok(response_vec)
+            },
+            _ => Err(Error::new(ErrorKind::InvalidData, "invalid response data"))
+        }
+    }
+}
+
+#[async_trait]
+impl WriterExt for Context {
+    async fn write_file_record(&mut self, file_number: u16, record_number: u16, record_data: Vec<u16>) -> Result<(), Error> {
+        let mut request: Vec<u8> = vec![6]; // Reference type is always 6.
+        let mut args_vec: Vec<u8> = vec![file_number, record_number, record_data.len() as u16]
+            .iter()
+            .flat_map(|&x| x.to_be_bytes())
+            .collect();
+        request.append(&mut args_vec);
+        request.append(
+            &mut record_data
+                .iter()
+                .flat_map(|&x| x.to_be_bytes())
+                .collect()
+        );
+        request.insert(0, request.len() as u8);
+        let rsp = self.call(Request::Custom(WRITE_FILE_RECORD, request.clone())).await?;
+        match rsp {
+            Response::Custom(_func_code, response_vec) => {
+                if response_vec.iter().all(|x| request.contains(x)) {
+                    Ok(())
+                } else {
+                    Err(Error::new(ErrorKind::InvalidData, "unexpected response"))
+                }
             },
             _ => Err(Error::new(ErrorKind::InvalidData, "invalid response data"))
         }
