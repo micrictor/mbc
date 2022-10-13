@@ -6,6 +6,7 @@ mod args;
 mod client;
 mod custom;
 mod read;
+mod output;
 mod write;
 mod uri;
 
