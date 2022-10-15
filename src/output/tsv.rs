@@ -3,8 +3,8 @@ use std::io::Write;
 use anyhow::Error;
 use crate::output::Output;
 
-struct TsvOutput {
-    file: dyn Write,
+pub struct TsvOutput {
+    pub file: Box<dyn Write>,
 }
 
 impl Output for TsvOutput {
@@ -12,6 +12,7 @@ impl Output for TsvOutput {
         writeln!(self.file, "{}", columns.join("\t"))?;
         for row in rows.iter() {
             write!(self.file, "{}", row.join("\t"))?;
+            write!(self.file, "\n")?;
         }
         
         Ok(())

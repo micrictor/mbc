@@ -1,5 +1,7 @@
 use anyhow::{Context, Result};
 use clap::{Parser};
+use std::io::stdout;
+use crate::output::Output;
 use tokio;
 
 mod args;
@@ -35,9 +37,7 @@ async fn main() -> Result<()> {
             .with_context(|| "failed to write")?,
     };
 
-    println!("{}", result.columns.join("\t"));
-    for row in result.rows {
-        println!("{}", row.join("\t"));
-    }
+    output::tsv::TsvOutput{file: Box::new(stdout())}.write_output(result.columns, result.rows)
+        .with_context(|| "failed to output")?;
     Ok(())
 }
