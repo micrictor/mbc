@@ -37,7 +37,7 @@ async fn main() -> Result<()> {
             .with_context(|| "failed to write")?,
     };
 
-    output::TsvOutput{file: Box::new(stdout())}.write_output(result.columns, result.rows)
+    output::CsvOutput{file: Box::new(stdout())}.write_output(result.columns, result.rows)
         .with_context(|| "failed to output")?;
     Ok(())
 }
