@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use crate::{custom, read, write, uri};
+use crate::{custom, read, write, uri, output::OutputPlugin};
 
 #[derive(Clone, Parser, Debug)]
 #[clap(author="Michael Torres", about="A CLI for making Modbus requests")]
@@ -19,6 +19,10 @@ pub struct Args {
     /// File to write the results to.
     #[clap(long, short, value_parser, default_value = "stdout")]
     pub output_file: String,
+
+    /// Output plugin to use
+    #[clap(long, value_enum, default_value_t = OutputPlugin::Tsv)]
+    pub output_plugin: OutputPlugin,
 
     #[clap(subcommand)]
     pub action: Action,

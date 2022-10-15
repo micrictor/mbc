@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Parser};
+use output::OutputPlugin;
 use std::{io::{stdout, Write}, fs::OpenOptions};
 use crate::output::Output;
 use tokio;
@@ -50,7 +51,11 @@ async fn main() -> Result<()> {
             .with_context(|| "failed to write")?,
     };
 
-    output::CsvOutput{file}.write_output(result.columns, result.rows)
-        .with_context(|| "failed to output")?;
+    let mut outputter: Box<dyn output::Output> = match args.output_plugin {
+        OutputPlugin::Csv => Box::new(output::CsvOutput{file}),
+        OutputPlugin::Tsv => Box::new(output::TsvOutput{file}),
+    };
+    outputter.write_output(result.columns, result.rows)
+        .with_context(|| format!("failed to write output using {:?}", args.output_plugin))?;
     Ok(())
 }
