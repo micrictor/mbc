@@ -1,7 +1,7 @@
 
 use clap::{Args, Subcommand};
 
-/// Read status information from the remote bus
+/// Write information onto the remote bus
 #[derive(Args, Clone, Debug)]
 pub struct WriteArgs {
     #[clap(subcommand)]
