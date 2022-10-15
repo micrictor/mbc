@@ -16,6 +16,10 @@ pub struct Args {
     #[clap(value_parser, default_value_t = 42)]
     pub terminal_id: u8,
 
+    /// File to write the results to.
+    #[clap(long, short, value_parser, default_value = "stdout")]
+    pub output_file: String,
+
     #[clap(subcommand)]
     pub action: Action,
 }

@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Parser};
-use std::io::stdout;
+use std::{io::{stdout, Write}, fs::OpenOptions};
 use crate::output::Output;
 use tokio;
 
@@ -21,6 +21,19 @@ pub struct CommandResult {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = args::Args::parse();
+    let file: Box<dyn Write> = match args.clone().output_file.as_str() {
+        "stdout" => Box::new(stdout()),
+        _ => {
+            let file_name = args.output_file.clone();
+            Box::new(OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open(file_name)
+                .with_context(|| format!("could not open output file"))?
+            )
+        }
+    };
+
     let mut client = client::context_try_from(args.clone())
         .await
         .with_context(|| format!("could not open `{}`", args.uri))?;
@@ -37,7 +50,7 @@ async fn main() -> Result<()> {
             .with_context(|| "failed to write")?,
     };
 
-    output::CsvOutput{file: Box::new(stdout())}.write_output(result.columns, result.rows)
+    output::CsvOutput{file}.write_output(result.columns, result.rows)
         .with_context(|| "failed to output")?;
     Ok(())
 }
