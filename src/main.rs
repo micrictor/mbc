@@ -2,7 +2,6 @@ use anyhow::{Context, Result};
 use clap::{Parser};
 use output::OutputPlugin;
 use std::{io::{stdout, Write}, fs::OpenOptions};
-use crate::output::Output;
 use tokio;
 
 mod args;
