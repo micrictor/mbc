@@ -54,6 +54,7 @@ async fn main() -> Result<()> {
     let mut outputter: Box<dyn output::Output> = match args.output_plugin {
         OutputPlugin::Csv => Box::new(output::CsvOutput{file}),
         OutputPlugin::Tsv => Box::new(output::TsvOutput{file}),
+        OutputPlugin::Json => Box::new(output::JsonOutput{file}),
     };
     outputter.write_output(result.columns, result.rows)
         .with_context(|| format!("failed to write output using {:?}", args.output_plugin))?;

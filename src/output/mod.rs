@@ -3,6 +3,8 @@ use clap::ValueEnum;
 
 mod csv;
 pub use crate::output::csv::CsvOutput;
+mod json;
+pub use crate::output::json::JsonOutput;
 mod tsv;
 pub use crate::output::tsv::TsvOutput;
 
@@ -15,4 +17,5 @@ pub trait Output {
 pub enum OutputPlugin {
     Csv,
     Tsv,
+    Json,
 }
